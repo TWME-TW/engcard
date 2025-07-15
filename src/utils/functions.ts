@@ -1,3 +1,5 @@
+import { Lang } from '@/type';
+
 export function shuffle<T>(array: T[]): T[] {
 	const result = [...array];
 	for (let i = result.length - 1; i > 0; i--) {
@@ -40,4 +42,19 @@ export function isFrench(str: string): boolean {
 export function isGerman(str: string): boolean {
 	// Basic German character detection including umlauts and ß
 	return /^[a-zA-ZäöüÄÖÜß\s]+$/.test(str);
+}
+
+export function detectWordLanguage(word: string): Lang {
+	const trimmedWord = word.trim();
+	
+	if (isChinese(trimmedWord)) return 'tw';
+	if (isJapanese(trimmedWord)) return 'ja';
+	if (isKorean(trimmedWord)) return 'ko';
+	if (isSpanish(trimmedWord)) return 'es';
+	if (isFrench(trimmedWord)) return 'fr'; 
+	if (isGerman(trimmedWord)) return 'de';
+	if (isEnglish(trimmedWord)) return 'en';
+	
+	// Default to English if detection is unclear
+	return 'en';
 }

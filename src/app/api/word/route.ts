@@ -9,12 +9,12 @@ import {
 	isSpanish,
 	isFrench,
 	isGerman,
+	detectWordLanguage,
 	OpenAIClient,
 	OpenAIHistoryTranscriber,
 } from '@/utils';
 import {
 	wordGeminiHistory,
-	wordSystemInstruction,
 	generateWordSystemInstruction,
 	Models,
 	wordSchema,
@@ -67,7 +67,22 @@ export async function GET(request: Request): Promise<Response> {
 	}*/
 
 	word = word.trimEnd().trimStart().toLowerCase();
-	const result = await db.findOne({ word });
+	
+	// Try to find word with matching target language first
+	let result = await db.findOne({ 
+		word, 
+		targetLanguage: targetLanguage as Lang,
+		$or: [{ avliable: { $ne: false } }, { avliable: { $exists: false } }]
+	});
+	
+	// If not found with specific target language, try any available word
+	if (!result) {
+		result = await db.findOne({ 
+			word,
+			$or: [{ avliable: { $ne: false } }, { avliable: { $exists: false } }]
+		});
+	}
+	
 	if (result) {
 		if (result.avliable === false) {
 			return NextResponse.json({ error: 'Word not found' }, { status: 404 });
@@ -83,12 +98,28 @@ export async function GET(request: Request): Promise<Response> {
 		data = await newWord(word, targetLanguage);
 	}
 	if (!data) {
-		await db.insertOne({ word, available: false });
+		await db.insertOne({ 
+			word, 
+			sourceLanguage: detectWordLanguage(word),
+			targetLanguage: targetLanguage as Lang,
+			available: false,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		});
 		return NextResponse.json({ error: 'Word not found' }, { status: 404 });
 	}
 
-	await db.insertOne(data);
-	return NextResponse.json(data, { status: 200 });
+	// Add language context to the word data before storing
+	const wordWithContext = {
+		...data,
+		sourceLanguage: detectWordLanguage(word),
+		targetLanguage: targetLanguage as Lang,
+		createdAt: new Date(),
+		updatedAt: new Date()
+	};
+
+	await db.insertOne(wordWithContext);
+	return NextResponse.json(wordWithContext, { status: 200 });
 }
 
 async function newWord(word: string, targetLanguage = 'en'): Promise<CardProps | null> {

@@ -159,10 +159,14 @@ export type ShareLink = {
 
 export type Word = {
 	word: string;
-	zh: string[];
+	sourceLanguage: Lang; // Language of the word being defined
+	targetLanguage: Lang; // Target learning language for definitions/examples
+	zh: string[]; // Legacy field - will be phased out
 	phonetic: string;
 	phonetics: Phonetic[];
 	blocks: Blocks[];
+	createdAt?: Date;
+	updatedAt?: Date;
 };
 
 export type WordHistory = {

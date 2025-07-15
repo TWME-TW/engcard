@@ -251,7 +251,7 @@ export default function Add({
 		if (word) {
 			debounceFunction(() => getWord());
 		}
-	}, [word, debounceFunction]);
+	}, [word, targetLanguage, debounceFunction]);
 
 	return (
 		<div
