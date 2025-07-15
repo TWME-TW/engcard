@@ -5,6 +5,10 @@ import {
 	isChinese,
 	isEnglish,
 	isJapanese,
+	isKorean,
+	isSpanish,
+	isFrench,
+	isGerman,
 	OpenAIClient,
 	OpenAIHistoryTranscriber,
 } from '@/utils';
@@ -31,7 +35,7 @@ export async function GET(request: Request): Promise<Response> {
 		return NextResponse.json({ error: 'Word is required' }, { status: 400 });
 	}
 
-	if (!(isChinese(word.trim()) || isEnglish(word.trim()))) {
+	if (!(isChinese(word.trim()) || isEnglish(word.trim()) || isJapanese(word.trim()) || isKorean(word.trim()) || isSpanish(word.trim()) || isFrench(word.trim()) || isGerman(word.trim()))) {
 		return NextResponse.json({ error: 'Word is not valid' }, { status: 400 });
 	}
 
@@ -71,9 +75,11 @@ export async function GET(request: Request): Promise<Response> {
 		return NextResponse.json(result, { status: 200 });
 	}
 	let data;
-	if (isJapanese(word)) {
+	// For non-English languages, use AI response directly since dictionary APIs are mainly English
+	if (isJapanese(word) || isKorean(word) || isSpanish(word) || isFrench(word) || isGerman(word) || isChinese(word)) {
 		data = await getAIResponse(word, targetLanguage);
 	} else {
+		// For English words, try dictionary APIs first, then fall back to AI
 		data = await newWord(word, targetLanguage);
 	}
 	if (!data) {

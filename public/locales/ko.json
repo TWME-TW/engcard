@@ -1,0 +1,16 @@
+{
+	"common": {
+		"greeting": "안녕하세요!",
+		"submit": "제출",
+		"cancel": "취소",
+		"language": {
+			"english": "English",
+			"traditionalChinese": "繁體中文",
+			"japanese": "日本語",
+			"korean": "한국어",
+			"spanish": "Español",
+			"french": "Français",
+			"german": "Deutsch"
+		}
+	}
+}
