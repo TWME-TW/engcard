@@ -18,32 +18,25 @@ export const LanguageSwitcher = ({ short = false }: { short?: boolean }) => {
 		}
 	}
 
+	// Available interface languages (currently only supporting en and zh-TW)
+	const interfaceLanguages = [
+		{ code: 'en', label: short ? t('common.language.english') : 'English' },
+		{ code: 'zh-TW', label: short ? t('common.language.traditionalChinese') : '繁體中文' },
+	];
+
 	return (
 		<div className='flex items-center space-x-2 p-2'>
-			<button
-				onClick={() => changeLanguage('en')}
-				className={`px-3 py-1 rounded-md text-sm font-medium
-                    ${
-											locale === 'en'
-												? 'bg-blue-500 text-white'
-												: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-										}`}
-				aria-pressed={locale === 'en'}
+			<select
+				value={locale}
+				onChange={(e) => changeLanguage(e.target.value)}
+				className='text-black dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-2 m-1 focus:ring-blue-500 dark:focus:ring-blue-300 focus:border-blue-500 dark:focus:border-blue-300'
 			>
-				{short ? t('common.language.english') : 'en'}
-			</button>
-			<button
-				onClick={() => changeLanguage('zh-TW')}
-				className={`px-3 py-1 rounded-md text-sm font-medium
-                    ${
-											locale === 'zh-TW'
-												? 'bg-blue-500 text-white'
-												: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-										}`}
-				aria-pressed={locale === 'zh-TW'}
-			>
-				{short ? t('common.language.traditionalChinese') : 'zh-TW'}
-			</button>
+				{interfaceLanguages.map((lang) => (
+					<option key={lang.code} value={lang.code}>
+						{lang.label}
+					</option>
+				))}
+			</select>
 		</div>
 	);
 };

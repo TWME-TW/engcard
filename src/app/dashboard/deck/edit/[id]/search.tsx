@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useTransition } from 'react';
 import Card from '@/components/card';
 import { addCardFromDB } from '@/actions/deck';
 import { useTranslation } from '@/context/LanguageContext'; // Added
+import { useTargetLanguage } from '@/hooks/useTargetLanguage';
 
 type PageProps = {
 	deckid?: string;
@@ -12,6 +13,7 @@ type PageProps = {
 
 export default function Search({ deckid, onAdd }: PageProps) {
 	const { t } = useTranslation(); // Added
+	const { targetLanguage } = useTargetLanguage();
 	const [word, setWord] = useState<string>('');
 	const [card, setCard] = useState<CardProps | null>(null);
 	const [isPending, startTransition] = useTransition();
@@ -22,7 +24,7 @@ export default function Search({ deckid, onAdd }: PageProps) {
 		}
 		startTransition(async () => {
 			// 'use client'; // Already a client component
-			const res = await fetch(`/api/word?word=${word}`);
+			const res = await fetch(`/api/word?word=${word}&targetLanguage=${targetLanguage}`);
 			console.log(res);
 			const json = await res.json();
 			startTransition(() => {
@@ -33,7 +35,7 @@ export default function Search({ deckid, onAdd }: PageProps) {
 				setCard(Object.assign(json, { flipped: true }));
 			});
 		});
-	}, [word]);
+	}, [word, targetLanguage]);
 
 	useEffect(() => {
 		if (!document) {

@@ -10,6 +10,7 @@ import {
 import Card from '@/components/card';
 import List from '@/components/list';
 import { useTranslation } from '@/context/LanguageContext';
+import { useTargetLanguage } from '@/hooks/useTargetLanguage';
 
 enum Type {
 	card,
@@ -18,6 +19,7 @@ enum Type {
 
 export default function Search() {
 	const { t } = useTranslation();
+	const { targetLanguage } = useTargetLanguage();
 	const [word, setWord] = useState<string>('');
 	const [card, setCard] = useState<CardProps | null>(null);
 	const [cards, setCards] = useState<CardProps[]>([]);
@@ -35,7 +37,7 @@ export default function Search() {
 		}
 		setIsSearched(true);
 		startTransition(async () => {
-			const res = await fetch(`/api/word?word=${word}`);
+			const res = await fetch(`/api/word?word=${word}&targetLanguage=${targetLanguage}`);
 			const json = await res.json();
 			startTransition(() => {
 				if (!json || json.error) {
@@ -53,7 +55,7 @@ export default function Search() {
 				}
 			});
 		});
-	}, [word]);
+	}, [word, targetLanguage]);
 
 	useEffect(() => {
 		if (!document) {

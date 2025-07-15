@@ -11,6 +11,7 @@ import {
 import {
 	wordGeminiHistory,
 	wordSystemInstruction,
+	generateWordSystemInstruction,
 	Models,
 	wordSchema,
 } from '@/utils';
@@ -24,6 +25,8 @@ import { zodResponseFormat } from 'openai/helpers/zod.mjs';
 export async function GET(request: Request): Promise<Response> {
 	const { searchParams } = new URL(request.url);
 	let word = searchParams.get('word');
+	const targetLanguage = searchParams.get('targetLanguage') || 'en';
+	
 	if (!word) {
 		return NextResponse.json({ error: 'Word is required' }, { status: 400 });
 	}
@@ -69,9 +72,9 @@ export async function GET(request: Request): Promise<Response> {
 	}
 	let data;
 	if (isJapanese(word)) {
-		data = await getAIResponse(word);
+		data = await getAIResponse(word, targetLanguage);
 	} else {
-		data = await newWord(word);
+		data = await newWord(word, targetLanguage);
 	}
 	if (!data) {
 		await db.insertOne({ word, available: false });
@@ -82,7 +85,7 @@ export async function GET(request: Request): Promise<Response> {
 	return NextResponse.json(data, { status: 200 });
 }
 
-async function newWord(word: string): Promise<CardProps | null> {
+async function newWord(word: string, targetLanguage = 'en'): Promise<CardProps | null> {
 	const sourceDataPromiseList = [
 		getWordFromDictionaryAPI(word),
 		getWordFromEnWordNetAPI(word),
@@ -91,9 +94,9 @@ async function newWord(word: string): Promise<CardProps | null> {
 		(data) => data !== null && data !== undefined,
 	) as CardProps[];
 	if (sourceDataList.length < 1) {
-		return await getAIResponse(word);
+		return await getAIResponse(word, targetLanguage);
 	}
-	return await getAIResponse(sourceDataList);
+	return await getAIResponse(sourceDataList, targetLanguage);
 }
 
 async function CheckData(
@@ -167,6 +170,7 @@ async function CheckData(
 
 async function getAIResponse(
 	processedData: CardProps | CardProps[] | string,
+	targetLanguage = 'en'
 ): Promise<CardProps> {
 	let AIResponse;
 	let prompt;
@@ -182,15 +186,18 @@ async function getAIResponse(
 					0,
 				)} blocks(part of speech)
 				Please response with all the blocks
-				And combine all the data into one data (from all the data sources)`;
+				And combine all the data into one data (from all the data sources)
+				Target language for translations: ${targetLanguage}`;
 		} else {
 			processedData = processedData as CardProps;
 			prompt = `data : ${JSON.stringify(processedData)}
 				it have ${processedData.blocks.length} blocks(part of speech)
-				Please response with all the blocks`;
+				Please response with all the blocks
+				Target language for translations: ${targetLanguage}`;
 		}
 	} else {
-		prompt = `word : ${processedData} Please response with all the blocks`;
+		prompt = `word : ${processedData} Please response with all the blocks
+			Target language for translations: ${targetLanguage}`;
 	}
 
 	try {
@@ -199,7 +206,7 @@ async function getAIResponse(
 			messages: [
 				{
 					role: 'system',
-					content: wordSystemInstruction,
+					content: generateWordSystemInstruction(targetLanguage),
 				},
 				...OpenAIHistoryTranscriber(wordGeminiHistory),
 				{
@@ -243,7 +250,7 @@ async function getAIResponse(
 				config: {
 					responseMimeType: 'application/json',
 					responseSchema: GwordSchema.toSchema(),
-					systemInstruction: wordSystemInstruction,
+					systemInstruction: generateWordSystemInstruction(targetLanguage),
 				},
 				contents: [
 					...wordGeminiHistory,

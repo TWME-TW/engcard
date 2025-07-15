@@ -185,7 +185,7 @@ export default function Settings() {
 								{t('dashboard.settings.targetLanguageLabel')}
 							</label>
 							<TargetLanguageSwitcher
-								value={settings.targetLanguage || LangEnum.EN}
+								value={(settings.targetLanguage || LangEnum.EN) as LangEnum}
 								onChange={(targetLanguage) => 
 									updateSettings('targetLanguage', targetLanguage)
 								}

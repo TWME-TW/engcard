@@ -1,6 +1,18 @@
 import { ChatAction } from '@/type';
 import { FunctionDeclaration, SchemaType } from '@google/generative-ai';
 import { Content } from '@google/genai';
+
+// Language code to name mapping for AI instructions
+const LANG_NAMES = {
+	en: 'English',
+	tw: 'Traditional Chinese (Taiwan)',
+	ja: 'Japanese',
+	ko: 'Korean',
+	es: 'Spanish',
+	fr: 'French',
+	de: 'German',
+};
+
 export const wordSystemInstruction = `
 You are an English linguistics expert. Process dictionary data and enhance it with complete multilingual translations.
 
@@ -17,6 +29,36 @@ You are an English linguistics expert. Process dictionary data and enhance it wi
 
 **Structure:** Group all definitions by part of speech (noun, verb, adjective, etc.) into single blocks rather than creating separate blocks for each definition.
 `;
+
+// Generate dynamic system instruction based on target language
+export function generateWordSystemInstruction(targetLanguage: string): string {
+	const targetLangName = LANG_NAMES[targetLanguage as keyof typeof LANG_NAMES] || 'English';
+	
+	return `
+You are a linguistics expert. Process dictionary data and enhance it with complete multilingual translations.
+
+**Requirements:**
+- Preserve ALL original data structure and content
+- Add appropriate language code field with translations of the word
+- Translate ALL definitions and examples to ${targetLangName}
+- Provide at least 2 examples per definition in English and ${targetLangName}
+- Maintain professional accuracy and cultural appropriateness
+- Return valid JSON with identical structure plus required multilingual fields
+- **Merge definitions with the same part of speech into a single block**
+
+**Critical:** Every definition and example MUST have English ("en") and ${targetLangName} ("${targetLanguage}") versions. Incomplete translations are unacceptable.
+
+**Structure:** Group all definitions by part of speech (noun, verb, adjective, etc.) into single blocks rather than creating separate blocks for each definition.
+
+**Language-specific requirements:**
+${targetLanguage === 'tw' ? '- Use Traditional Chinese characters (Taiwan variant)' : ''}
+${targetLanguage === 'ja' ? '- Use appropriate Japanese script (hiragana, katakana, kanji as needed)' : ''}
+${targetLanguage === 'ko' ? '- Use Korean Hangul script' : ''}
+${targetLanguage === 'es' ? '- Use proper Spanish grammar and vocabulary' : ''}
+${targetLanguage === 'fr' ? '- Use proper French grammar and vocabulary' : ''}
+${targetLanguage === 'de' ? '- Use proper German grammar and vocabulary' : ''}
+`;
+}
 
 export const wordGeminiHistory: Content[] = [
 	{

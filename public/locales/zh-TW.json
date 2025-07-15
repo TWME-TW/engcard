@@ -5,7 +5,12 @@
 		"cancel": "取消",
 		"language": {
 			"english": "English",
-			"traditionalChinese": "正體中文"
+			"traditionalChinese": "正體中文",
+			"japanese": "日本語",
+			"korean": "한국어",
+			"spanish": "Español",
+			"french": "Français",
+			"german": "Deutsch"
 		},
 		"theme": {
 			"switchToLight": "切換到明亮模式",
