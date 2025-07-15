@@ -1,0 +1,13 @@
+{
+	"common": {
+		"language": {
+			"english": "English",
+			"traditionalChinese": "繁體中文",
+			"japanese": "日本語",
+			"korean": "한국어",
+			"spanish": "Español",
+			"french": "Français",
+			"german": "Deutsch"
+		}
+	}
+}
