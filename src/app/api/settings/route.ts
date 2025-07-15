@@ -1,5 +1,6 @@
 import db from '@/lib/db';
 import { DeckType, OCRProcessType, UserSettingsCollection } from '@/type';
+import { LangEnum } from '@/types/lang';
 import { auth } from '@/utils';
 import { NextResponse } from 'next/server';
 
@@ -26,6 +27,7 @@ export async function GET(req: Request) {
 			userId: session.user?.id || '',
 			deckActionType: DeckType.AutoChangeToNext,
 			ocrProcessType: OCRProcessType.FromSource,
+			targetLanguage: LangEnum.EN,
 		};
 		const result = await db
 			.collection<UserSettingsCollection>('settings')

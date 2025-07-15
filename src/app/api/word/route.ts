@@ -5,12 +5,17 @@ import {
 	isChinese,
 	isEnglish,
 	isJapanese,
+	isKorean,
+	isSpanish,
+	isFrench,
+	isGerman,
+	detectWordLanguage,
 	OpenAIClient,
 	OpenAIHistoryTranscriber,
 } from '@/utils';
 import {
 	wordGeminiHistory,
-	wordSystemInstruction,
+	generateWordSystemInstruction,
 	Models,
 	wordSchema,
 } from '@/utils';
@@ -24,11 +29,13 @@ import { zodResponseFormat } from 'openai/helpers/zod.mjs';
 export async function GET(request: Request): Promise<Response> {
 	const { searchParams } = new URL(request.url);
 	let word = searchParams.get('word');
+	const targetLanguage = searchParams.get('targetLanguage') || 'en';
+	
 	if (!word) {
 		return NextResponse.json({ error: 'Word is required' }, { status: 400 });
 	}
 
-	if (!(isChinese(word.trim()) || isEnglish(word.trim()))) {
+	if (!(isChinese(word.trim()) || isEnglish(word.trim()) || isJapanese(word.trim()) || isKorean(word.trim()) || isSpanish(word.trim()) || isFrench(word.trim()) || isGerman(word.trim()))) {
 		return NextResponse.json({ error: 'Word is not valid' }, { status: 400 });
 	}
 
@@ -60,7 +67,22 @@ export async function GET(request: Request): Promise<Response> {
 	}*/
 
 	word = word.trimEnd().trimStart().toLowerCase();
-	const result = await db.findOne({ word });
+	
+	// Try to find word with matching target language first
+	let result = await db.findOne({ 
+		word, 
+		targetLanguage: targetLanguage as Lang,
+		$or: [{ avliable: { $ne: false } }, { avliable: { $exists: false } }]
+	});
+	
+	// If not found with specific target language, try any available word
+	if (!result) {
+		result = await db.findOne({ 
+			word,
+			$or: [{ avliable: { $ne: false } }, { avliable: { $exists: false } }]
+		});
+	}
+	
 	if (result) {
 		if (result.avliable === false) {
 			return NextResponse.json({ error: 'Word not found' }, { status: 404 });
@@ -68,21 +90,39 @@ export async function GET(request: Request): Promise<Response> {
 		return NextResponse.json(result, { status: 200 });
 	}
 	let data;
-	if (isJapanese(word)) {
-		data = await getAIResponse(word);
+	// For non-English languages, use AI response directly since dictionary APIs are mainly English
+	if (isJapanese(word) || isKorean(word) || isSpanish(word) || isFrench(word) || isGerman(word) || isChinese(word)) {
+		data = await getAIResponse(word, targetLanguage);
 	} else {
-		data = await newWord(word);
+		// For English words, try dictionary APIs first, then fall back to AI
+		data = await newWord(word, targetLanguage);
 	}
 	if (!data) {
-		await db.insertOne({ word, available: false });
+		await db.insertOne({ 
+			word, 
+			sourceLanguage: detectWordLanguage(word),
+			targetLanguage: targetLanguage as Lang,
+			available: false,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		});
 		return NextResponse.json({ error: 'Word not found' }, { status: 404 });
 	}
 
-	await db.insertOne(data);
-	return NextResponse.json(data, { status: 200 });
+	// Add language context to the word data before storing
+	const wordWithContext = {
+		...data,
+		sourceLanguage: detectWordLanguage(word),
+		targetLanguage: targetLanguage as Lang,
+		createdAt: new Date(),
+		updatedAt: new Date()
+	};
+
+	await db.insertOne(wordWithContext);
+	return NextResponse.json(wordWithContext, { status: 200 });
 }
 
-async function newWord(word: string): Promise<CardProps | null> {
+async function newWord(word: string, targetLanguage = 'en'): Promise<CardProps | null> {
 	const sourceDataPromiseList = [
 		getWordFromDictionaryAPI(word),
 		getWordFromEnWordNetAPI(word),
@@ -91,9 +131,9 @@ async function newWord(word: string): Promise<CardProps | null> {
 		(data) => data !== null && data !== undefined,
 	) as CardProps[];
 	if (sourceDataList.length < 1) {
-		return await getAIResponse(word);
+		return await getAIResponse(word, targetLanguage);
 	}
-	return await getAIResponse(sourceDataList);
+	return await getAIResponse(sourceDataList, targetLanguage);
 }
 
 async function CheckData(
@@ -167,6 +207,7 @@ async function CheckData(
 
 async function getAIResponse(
 	processedData: CardProps | CardProps[] | string,
+	targetLanguage = 'en'
 ): Promise<CardProps> {
 	let AIResponse;
 	let prompt;
@@ -182,15 +223,18 @@ async function getAIResponse(
 					0,
 				)} blocks(part of speech)
 				Please response with all the blocks
-				And combine all the data into one data (from all the data sources)`;
+				And combine all the data into one data (from all the data sources)
+				Target language for translations: ${targetLanguage}`;
 		} else {
 			processedData = processedData as CardProps;
 			prompt = `data : ${JSON.stringify(processedData)}
 				it have ${processedData.blocks.length} blocks(part of speech)
-				Please response with all the blocks`;
+				Please response with all the blocks
+				Target language for translations: ${targetLanguage}`;
 		}
 	} else {
-		prompt = `word : ${processedData} Please response with all the blocks`;
+		prompt = `word : ${processedData} Please response with all the blocks
+			Target language for translations: ${targetLanguage}`;
 	}
 
 	try {
@@ -199,7 +243,7 @@ async function getAIResponse(
 			messages: [
 				{
 					role: 'system',
-					content: wordSystemInstruction,
+					content: generateWordSystemInstruction(targetLanguage),
 				},
 				...OpenAIHistoryTranscriber(wordGeminiHistory),
 				{
@@ -243,7 +287,7 @@ async function getAIResponse(
 				config: {
 					responseMimeType: 'application/json',
 					responseSchema: GwordSchema.toSchema(),
-					systemInstruction: wordSystemInstruction,
+					systemInstruction: generateWordSystemInstruction(targetLanguage),
 				},
 				contents: [
 					...wordGeminiHistory,

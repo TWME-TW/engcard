@@ -14,6 +14,7 @@ import { addCard } from '@/actions/deck';
 import { Langs } from '@/types/lang';
 import { useDebounce } from './../../../../../hooks/usedebounce';
 import { useTranslation } from '@/context/LanguageContext'; // Added
+import { useTargetLanguage } from '@/hooks/useTargetLanguage';
 
 export default function Add({
 	defaultValue,
@@ -27,6 +28,7 @@ export default function Add({
 	onAdd?: () => void;
 }) {
 	const { t } = useTranslation(); // Added
+	const { targetLanguage } = useTargetLanguage();
 	const [word, setWord] = useState('');
 	const [partOfSpeech, setPartOfSpeech] = useState<PartOfSpeech>(
 		PartOfSpeech.Noun,
@@ -236,7 +238,7 @@ export default function Add({
 
 	useEffect(() => {
 		const getWord = async () => {
-			const res = await fetch(`/api/word?word=${word}`);
+			const res = await fetch(`/api/word?word=${word}&targetLanguage=${targetLanguage}`);
 			const data = await res.json();
 			if (data.error) {
 				console.log(data.error);
@@ -249,7 +251,7 @@ export default function Add({
 		if (word) {
 			debounceFunction(() => getWord());
 		}
-	}, [word, debounceFunction]);
+	}, [word, targetLanguage, debounceFunction]);
 
 	return (
 		<div

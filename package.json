@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "translate:locales": "node scripts/translate-locales.js",
+    "translate:single": "node scripts/translate-locales.js"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.9.1",

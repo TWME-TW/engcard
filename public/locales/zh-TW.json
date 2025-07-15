@@ -5,7 +5,12 @@
 		"cancel": "取消",
 		"language": {
 			"english": "English",
-			"traditionalChinese": "正體中文"
+			"traditionalChinese": "正體中文",
+			"japanese": "日本語",
+			"korean": "한국어",
+			"spanish": "Español",
+			"french": "Français",
+			"german": "Deutsch"
 		},
 		"theme": {
 			"switchToLight": "切換到明亮模式",
@@ -99,7 +104,8 @@
 			"ocrOptionOnlyDefinition": "僅使用掃描圖片中的定義",
 			"ocrOptionFullySource": "完全來自來源",
 			"alertLoadFailed": "載入設定失敗：",
-			"languageLabel": "語言",
+			"languageLabel": "介面語言",
+			"targetLanguageLabel": "學習目標語言",
 			"themeToggle": "樣式切換",
 			"resetGuideCard": "重置卡片指南",
 			"resetGuideDashboard": "重置儀表板指南",
