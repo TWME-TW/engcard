@@ -1,10 +1,12 @@
 'use client';
 
 import { DeckType, UserSettingsCollection } from '@/type';
+import { LangEnum } from '@/types/lang';
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from '@/context/LanguageContext'; // Added
 import { LanguageSwitcher } from './../../../components/client/LanguageSwitcher';
+import { TargetLanguageSwitcher } from './../../../components/client/TargetLanguageSwitcher';
 import { ThemeToggler } from './../../../components/ThemeToggler';
 import { useLocalStorage } from '@/hooks/localstorage';
 
@@ -172,6 +174,22 @@ export default function Settings() {
 								{t('dashboard.settings.languageLabel')}
 							</label>
 							<LanguageSwitcher />
+						</div>
+					</div>
+					<div className='flex flex-col m-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow'>
+						<div className='flex flex-row flex-wrap items-center justify-between'>
+							<label
+								htmlFor='targetLanguageSwitcher'
+								className='text-gray-700 dark:text-gray-200'
+							>
+								{t('dashboard.settings.targetLanguageLabel')}
+							</label>
+							<TargetLanguageSwitcher
+								value={settings.targetLanguage || LangEnum.EN}
+								onChange={(targetLanguage) => 
+									updateSettings('targetLanguage', targetLanguage)
+								}
+							/>
 						</div>
 					</div>
 					<div className='flex flex-col m-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow'>

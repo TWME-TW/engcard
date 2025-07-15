@@ -276,6 +276,7 @@ export type UserSettingsCollection = {
 	userId: string;
 	deckActionType: DeckType;
 	ocrProcessType: OCRProcessType;
+	targetLanguage?: Lang;
 };
 
 export type WithAvliable<T> = T & {

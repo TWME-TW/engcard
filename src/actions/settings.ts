@@ -1,5 +1,6 @@
 import db from '@/lib/db';
 import { DeckType, UserSettingsCollection } from '@/type';
+import { LangEnum } from '@/types/lang';
 import { auth } from '@/utils/auth';
 import { WithId } from 'mongodb';
 
@@ -17,6 +18,7 @@ export async function getSettings(): Promise<UserSettingsCollection> {
 		settings = {
 			userId: session.user?.id || '',
 			deckActionType: DeckType.ChangeByButton,
+			targetLanguage: LangEnum.EN,
 		} as WithId<UserSettingsCollection>;
 		await db.collection<UserSettingsCollection>('settings').insertOne(settings);
 	}

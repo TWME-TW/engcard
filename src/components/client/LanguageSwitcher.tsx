@@ -42,7 +42,7 @@ export const LanguageSwitcher = ({ short = false }: { short?: boolean }) => {
 										}`}
 				aria-pressed={locale === 'zh-TW'}
 			>
-				{short ? t('common.language.chinese') : 'zh-TW'}
+				{short ? t('common.language.traditionalChinese') : 'zh-TW'}
 			</button>
 		</div>
 	);
