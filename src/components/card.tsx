@@ -3,19 +3,29 @@
 import { CardProps, PartOfSpeechShort } from '@/type';
 import { useEffect, useState } from 'react';
 import { useAudio } from '@/hooks/useAudio';
+import { useTargetLanguage } from '@/hooks/useTargetLanguage';
+import { filterCardByTargetLanguage } from '@/utils/cardFiltering';
 import Image from 'next/image';
 import { useTranslation } from '@/context/LanguageContext'; // Added
 
 export default function Card({ card }: { card: CardProps }) {
 	const { t } = useTranslation(); // Added
+	const { targetLanguage, isLoading: isTargetLanguageLoading } = useTargetLanguage();
 	const [cardData, setcardData] = useState<CardProps>(card);
 	const [flipped, setFlipped] = useState(card.flipped || false);
 	const [isPlaying, toggle] = useAudio(cardData.audio || '');
 
 	useEffect(() => {
 		setFlipped(card.flipped || false);
-		setcardData(card);
-	}, [card]);
+		
+		// Filter card content based on target language preference
+		if (!isTargetLanguageLoading && targetLanguage) {
+			const filteredCard = filterCardByTargetLanguage(card, targetLanguage);
+			setcardData(filteredCard);
+		} else {
+			setcardData(card);
+		}
+	}, [card, targetLanguage, isTargetLanguageLoading]);
 
 	const { word, phonetic, blocks, audio } = cardData;
 	return (
